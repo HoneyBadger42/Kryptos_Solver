@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#########################
+#                       #
+#  JUST RUN THE SCRIPT  #
+#                       #
+#########################
+
+gcc ../REFLECTION/ALGO/char_analysis.c
+./a.out enigma.txt
+rm ./a.out
+
+echo ;
+
+cat enigma.txt
+cat enigma.txt | sed -e "s/NYPVTT/BERLIN/g" | sed -e "s/MZFPK/CLOCK/g" | grep --color=auto BERLINCLOCK

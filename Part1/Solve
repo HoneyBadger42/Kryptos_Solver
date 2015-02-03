@@ -1,0 +1,32 @@
+#!/bin/bash
+
+gcc ../REFLECTION/ALGO/kryptos_vigenere.c
+./a.out -d "palimpsest" `cat enigma.txt`
+rm ./a.out
+
+#
+# Using vigenere algo, optimized for the KRYPTOS enigma
+#
+# - - - - -
+#
+# Using my char_analysis.c
+# It doesn't look like english language... Maybe scandinavian :)
+#
+# Oh look, a Vigenere table !
+# Is this part1's text, a Vigenere cipher ? => Probably
+#
+# - - - - -
+#
+# To be honest I knew already knew the keys of part1 and 2,
+# I just read a Wikipedia article about Kryptos...
+#
+# I just had to implement a cool Vigenere algo,
+# ready to use with the Kryptos configuration
+#
+# - - - - -
+#
+# Compile with:
+# -> gcc kryptos_vigenere.c -o kryptos_vigenere
+#
+# (c) Raphael Bobillot
+#

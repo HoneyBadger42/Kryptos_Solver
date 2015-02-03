@@ -1,0 +1,23 @@
+#!/bin/bash
+
+gcc ../REFLECTION/ALGO/kryptos_vigenere.c
+./a.out -d "abscissa" `cat enigma.txt`
+rm ./a.out
+
+#
+# Using vigenere algo, optimized for the KRYPTOS enigma
+#
+# - - - - -
+#
+# Using my char_analysis.c
+# It doesn't look like english language... Maybe scandinavian :)
+#
+# Is this part2's text, still a Vigenere cipher ? => Sure
+#
+# - - - - -
+#
+# Compile with:
+# -> gcc kryptos_vigenere.c -o kryptos_vigenere
+#
+# (c) Raphael Bobillot
+#
