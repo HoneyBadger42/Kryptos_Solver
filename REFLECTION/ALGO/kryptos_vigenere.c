@@ -36,14 +36,14 @@ int			usage(void)
 	printf("usage: \033[92m./kryptos_vigenere\033[0m <-e|-d> <key | wordlist> <string>\n");
 	printf("\n\033[93mexamples\033[0m:\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e \"maclef\" \"coucou\"\n");
-	printf("\033[96m>\033[0m RFTKJA\n");
+	printf("\033[96m> \033[94mMACLEF\033[0m: RFTKJA\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e - \"coucou\"\n");
-	printf("\033[96m>\033[0m DAXGDR\n");
+	printf("\033[96m> \033[94mKRYPTOSABCDEFGHIJLMNQUVWXZ\033[0m: DAXGDR\n");
 	printf("\n----------------\n\n");
 	printf("\033[95m> \033[92m./kryptos_vigenere\033[0m -d \"maclef\" \"RFTKJA\"\n");
-	printf("\033[95m>\033[0m COUCOU\n");
+	printf("\033[95m> \033[94mMACLEF\033[0m: COUCOU\n");
 	printf("\033[95m> \033[92m./kryptos_vigenere\033[0m -d - \"DAXGDR\"\n");
-	printf("\033[95m>\033[0m COUCOU\n");
+	printf("\033[95m> \033[94mKRYPTOSABCDEFGHIJLMNQUVWXZ\033[0m: COUCOU\n");
 	return (-1);
 }
 
