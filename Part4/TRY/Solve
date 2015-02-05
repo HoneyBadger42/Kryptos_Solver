@@ -1,7 +1,12 @@
 #!/bin/bash
 
 gcc ../../REFLECTION/ALGO/kryptos_vigenere.c
-./a.out -d "$1" `cat ../enigma.txt`
+
+for i in `cat DICO`
+do
+	./a.out -d "$i" `cat ../enigma.txt`
+done
+
 rm ./a.out
 
 #
