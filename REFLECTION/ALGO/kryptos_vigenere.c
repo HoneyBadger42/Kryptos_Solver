@@ -33,8 +33,11 @@ const char	*ALPHABET = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
 
 int			usage(void)
 {
-	printf("usage: \033[92m./kryptos_vigenere\033[0m <-e|-d> <key | wordlist> <string>\n");
-	printf("\n\033[93mexamples\033[0m:\n");
+	printf("usage: \033[92m./kryptos_vigenere\033[0m");
+	printf(" <\033[95m-e\033[0m|\033[95m-d\033[0m> ");
+	printf("<\033[94mkey\033[0m|\033[94mwordlist\033[0m> ");
+	printf("<\033[96mstring\033[0m|\033[96mfile\033[0m>\n");
+	printf("\n\033[93mExamples\033[0m:\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e \"maclef\" \"coucou\"\n");
 	printf("\033[96m> \033[94mMACLEF\033[0m: RFTKJA\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e - \"coucou\"\n");
@@ -110,7 +113,6 @@ char		**get_key(char *av[])
 				while (i < 63)
 					tmp[i++] = 0;
 				key[j++] = strdup(tmp);
-//				printf("'%s'\n", key[j-1]);
 				i = 0;
 			}
 			else
@@ -118,7 +120,7 @@ char		**get_key(char *av[])
 		}
 		key[j] = NULL;
 		free(tmp);
-		printf("\033[92mDone...\033[0m\n\n");
+		printf("\033[92mDone\033[0m -> \033[96m%d\033[0m words to test.\n\n", j);
 	}
 	return (key);
 }
@@ -151,22 +153,20 @@ int			get_pos(char *s, char c)
 char		*VIGENERE(char *src, char **table)
 {
 	int		i, j, k;
-	char	*res;
+	char	*res = NULL;
 
-	res = (char *)malloc(sizeof(char) * strlen(src) + 1);
+	res = (char *)malloc(sizeof(char) * 64);
+	for (i=0; i < 64; i++)
+		res[i] = 0;
 	for (i=0, j=1, k=0; src[i]; i++)
 	{
 		j = (!table[j]) ? 1 : j;	// always check each letter of the KEY
 
 		if (flag == ENCODE)
 		{
-	//		res[k] = (src[i] >= 'A' && src[i] <= 'Z')
-	//			? table[j++][get_pos(table[0], src[i])]
-	//			: src[i];
-			if (src[i] >= 'A' && src[i] <= 'Z')
-				res[k] = table[j++][get_pos(table[0], src[i])];
-			else
-				res[k] = src[i];
+			res[k] = (src[i] >= 'A' && src[i] <= 'Z')
+				? table[j++][get_pos(table[0], src[i])]
+				: src[i];
 		}
 		else
 		{
@@ -174,6 +174,7 @@ char		*VIGENERE(char *src, char **table)
 				? table[0][get_pos(table[j++], src[i])]
 				: src[i];
 		}
+//		printf("%c", res[k]);
 		k++;
 	}
 	res[k] = 0;
@@ -216,20 +217,22 @@ int			main(int ac, char *av[])
 	for (x = 0; key[x]; x++)
 	{
 		TABLE = (char **)malloc(sizeof(char *) * 1024);
+
 		printf("\033[94m%s\033[0m: ", key[x]);
 		init_vig_table(key[x]);	// create a Vigenere table
-		// (based on custom alphabet)
+								// (based on custom alphabet)
 
 		res = VIGENERE(str, TABLE);
 		print_res(res);
+		free(res);
 
 		for (i=0; TABLE[i]; i++)	// get rid of memory leaks
-			free(TABLE[i]);		// because -SWAG-
-		free(TABLE);			// deal with it
+			free(TABLE[i]);			// because -SWAG-
+		free(TABLE);				// deal with it
 	}
 	for (i=0; key[i]; i++)	// still getting rid of memory leaks
 		free(key[i]);		// still because -SWAG-
-	free(key);			// then goddam deal with it
+	free(key);				// then goddam deal with it
 
 	return (0);
 }
