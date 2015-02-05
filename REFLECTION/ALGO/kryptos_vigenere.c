@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define DECODE 32
 #define ENCODE 64
@@ -31,7 +33,7 @@ const char	*ALPHABET = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
 
 int			usage(void)
 {
-	printf("usage: \033[92m./kryptos_vigenere\033[0m <-e|-d> <key> <string>\n");
+	printf("usage: \033[92m./kryptos_vigenere\033[0m <-e|-d> <key | wordlist> <string>\n");
 	printf("\n\033[93mexamples\033[0m:\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e \"maclef\" \"coucou\"\n");
 	printf("\033[96m>\033[0m RFTKJA\n");
@@ -77,18 +79,45 @@ char		*str_toupper(char *str)
 
 char		**get_key(char *av[])
 {
+	int		fd;
 	char	**key = (char **)malloc(sizeof(char *) * (1 << 25));
 
-	if (!av[2])
+	if ((fd = open(av[2], O_RDONLY)) < 0)
 	{
-		key[0] = strdup(ALPHABET);
-		key[1] = NULL;
+		if (!av[2])
+		{
+			key[0] = strdup(ALPHABET);
+			key[1] = NULL;
+		}
+		else
+		{
+			key[0] = (!av[2][0] || !strcmp(av[2], "-"))
+				? strdup(ALPHABET) : strdup(str_toupper(av[2]));
+			key[1] = NULL;
+		}
 	}
 	else
 	{
-		key[0] = (!av[2][0] || !strcmp(av[2], "-"))
-			? strdup(ALPHABET) : strdup(str_toupper(av[2]));
-		key[1] = NULL;
+		char	c = 0;
+		int		i = 0, j = 0;
+		char	*tmp = (char *)malloc(sizeof(char) * 64);
+
+		printf("\033[93mPreparing bruteforce...\n");
+		while (read(fd, &c, 1) > 0)
+		{
+			if (c == '\n')
+			{
+				while (i < 63)
+					tmp[i++] = 0;
+				key[j++] = strdup(tmp);
+				i = 0;
+			}
+			else
+				tmp[i++] = c;
+		}
+		key[j] = NULL;
+		free(tmp);
+		printf("\033[92mDone...\033[0m\n\n");
 	}
 	return (key);
 }
@@ -171,12 +200,14 @@ int			main(int ac, char *av[])
 	flag = (av[1][1] - 'c') * 32;	// the result of this operation
 	// will be 32 (DECODE), or 64 (ENCODE)
 
+	str = strdup(str_toupper(av[3]));	// get a CAPS version of the tested string
+
 	key = get_key(av);	// get a clan version of the KEY
+
 	for (x = 0; key[x]; x++)
 	{
-		str = strdup(str_toupper(av[3]));	// get a CAPS version of the tested string
-
 		TABLE = (char **)malloc(sizeof(char *) * 1024);
+		printf("\033[94m%s\033[0m: ", key[x]);
 		init_vig_table(key[x]);	// create a Vigenere table
 		// (based on custom alphabet)
 
