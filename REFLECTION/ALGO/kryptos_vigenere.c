@@ -102,7 +102,7 @@ char		**get_key(char *av[])
 		int		i = 0, j = 0;
 		char	*tmp = (char *)malloc(sizeof(char) * 64);
 
-		printf("\033[93mPreparing bruteforce...\n");
+		printf("\033[93mPreparing bruteforce...\033[0m\n");
 		while (read(fd, &c, 1) > 0)
 		{
 			if (c == '\n')
@@ -110,6 +110,7 @@ char		**get_key(char *av[])
 				while (i < 63)
 					tmp[i++] = 0;
 				key[j++] = strdup(tmp);
+//				printf("'%s'\n", key[j-1]);
 				i = 0;
 			}
 			else
@@ -158,13 +159,21 @@ char		*VIGENERE(char *src, char **table)
 		j = (!table[j]) ? 1 : j;	// always check each letter of the KEY
 
 		if (flag == ENCODE)
-			res[k] = (src[i] >= 'A' && src[i] <= 'Z')
-				? table[j++][get_pos(table[0], src[i])]
-				: src[i];
+		{
+	//		res[k] = (src[i] >= 'A' && src[i] <= 'Z')
+	//			? table[j++][get_pos(table[0], src[i])]
+	//			: src[i];
+			if (src[i] >= 'A' && src[i] <= 'Z')
+				res[k] = table[j++][get_pos(table[0], src[i])];
+			else
+				res[k] = src[i];
+		}
 		else
+		{
 			res[k] = (src[i] >= 'A' && src[i] <= 'Z')
 				? table[0][get_pos(table[j++], src[i])]
 				: src[i];
+		}
 		k++;
 	}
 	res[k] = 0;
@@ -182,7 +191,7 @@ void		init_vig_table(char *key)
 		for (i=1; i < (int)strlen(ALPHABET); i++)
 		{
 			tmp = rot_n(ALPHABET, i);		// rotation algorithm
-			// to generate a Vigenere table
+											// to generate a Vigenere table
 			if (tmp[0] == key[j])
 				TABLE[k++] = strdup(tmp);
 		}
@@ -198,7 +207,7 @@ int			main(int ac, char *av[])
 	if (check_args(ac, av))
 		return (-1);
 	flag = (av[1][1] - 'c') * 32;	// the result of this operation
-	// will be 32 (DECODE), or 64 (ENCODE)
+									// will be 32 (DECODE), or 64 (ENCODE)
 
 	str = strdup(str_toupper(av[3]));	// get a CAPS version of the tested string
 
