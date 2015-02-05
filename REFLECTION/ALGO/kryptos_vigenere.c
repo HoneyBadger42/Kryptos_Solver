@@ -1,22 +1,22 @@
 /*
-**
-** Vigenere algo,
-** optimized for the KRYPTOS enigma
-** Fast and leaks-free program (you can use it while BruteForcing keys).
-**
-** - - - - -
-**
-** The first key is "PALIMPSEST" (use it to solve the first part)
-** The second one is "ABSCISSA" (use it to solve the second part)
-**
-** - - - - -
-**
-** Compile with:
-** -> gcc kryptos_vigenere.c -o kryptos_vigenere
-**
-** (c) Raphael Bobillot
-**
-*/
+ **
+ ** Vigenere algo,
+ ** optimized for the KRYPTOS enigma
+ ** Fast and leaks-free program (you can use it while BruteForcing keys).
+ **
+ ** - - - - -
+ **
+ ** The first key is "PALIMPSEST" (use it to solve the first part)
+ ** The second one is "ABSCISSA" (use it to solve the second part)
+ **
+ ** - - - - -
+ **
+ ** Compile with:
+ ** -> gcc kryptos_vigenere.c -o kryptos_vigenere
+ **
+ ** (c) Raphael Bobillot
+ **
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,22 +68,28 @@ void		print_res(char *s)
 
 char		*str_toupper(char *str)
 {
-	int		i, j;
+	int		i;
 
 	for (i = 0; str[i]; i++)
 		str[i] -= (str[i] >= 'a' && str[i] <= 'z') ? 0x20 : 0x00;
 	return (str);
 }
 
-char		*get_key(char *av[])
+char		**get_key(char *av[])
 {
-	char	*key;
+	char	**key = (char **)malloc(sizeof(char *) * (1 << 25));
 
 	if (!av[2])
-		key = strdup(ALPHABET);
+	{
+		key[0] = strdup(ALPHABET);
+		key[1] = NULL;
+	}
 	else
-		key = (!av[2][0] || !strcmp(av[2], "-"))
+	{
+		key[0] = (!av[2][0] || !strcmp(av[2], "-"))
 			? strdup(ALPHABET) : strdup(str_toupper(av[2]));
+		key[1] = NULL;
+	}
 	return (key);
 }
 
@@ -147,7 +153,7 @@ void		init_vig_table(char *key)
 		for (i=1; i < (int)strlen(ALPHABET); i++)
 		{
 			tmp = rot_n(ALPHABET, i);		// rotation algorithm
-											// to generate a Vigenere table
+			// to generate a Vigenere table
 			if (tmp[0] == key[j])
 				TABLE[k++] = strdup(tmp);
 		}
@@ -157,28 +163,33 @@ void		init_vig_table(char *key)
 
 int			main(int ac, char *av[])
 {
-	int		i;
-	char	*res, *key, *str;
+	int		i, x;
+	char	*res, **key, *str;
 
 	if (check_args(ac, av))
 		return (-1);
 	flag = (av[1][1] - 'c') * 32;	// the result of this operation
-									// will be 32 (DECODE), or 64 (ENCODE)
+	// will be 32 (DECODE), or 64 (ENCODE)
 
 	key = get_key(av);	// get a clan version of the KEY
+	for (x = 0; key[x]; x++)
+	{
+		str = strdup(str_toupper(av[3]));	// get a CAPS version of the tested string
 
-	str = strdup(str_toupper(av[3]));	// get a CAPS version of the tested string
+		TABLE = (char **)malloc(sizeof(char *) * 1024);
+		init_vig_table(key[x]);	// create a Vigenere table
+		// (based on custom alphabet)
 
-	TABLE = (char **)malloc(sizeof(char *) * 1024);
-	init_vig_table(key);	// create a Vigenere table
-							// (based on custom alphabet)
+		res = VIGENERE(str, TABLE);
+		print_res(res);
 
-	res = VIGENERE(str, TABLE);
-	print_res(res);
-
-	for (i=0;TABLE[i];i++)	// get rid of memory leaks
-		free(TABLE[i]);		// because -SWAG-
-	free(TABLE);			// deal with it
+		for (i=0; TABLE[i]; i++)	// get rid of memory leaks
+			free(TABLE[i]);		// because -SWAG-
+		free(TABLE);			// deal with it
+	}
+	for (i=0; key[i]; i++)	// still getting rid of memory leaks
+		free(key[i]);		// still because -SWAG-
+	free(key);			// then goddam deal with it
 
 	return (0);
 }
