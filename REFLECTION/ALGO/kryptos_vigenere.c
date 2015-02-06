@@ -28,7 +28,6 @@
 #define ENCODE 64
 
 int			flag;
-char		**TABLE;
 const char	*ALPHABET = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
 
 int			usage(void)
@@ -83,10 +82,11 @@ char		*str_toupper(char *str)
 char		**get_key(char *av[])
 {
 	int		fd;
-	char	**key = (char **)malloc(sizeof(char *) * (1 << 25));
+	char	**key = NULL;
 
 	if ((fd = open(av[2], O_RDONLY)) < 0)
 	{
+		key = (char **)malloc(sizeof(char *) * 2);
 		if (!av[2])
 		{
 			key[0] = strdup(ALPHABET);
@@ -106,13 +106,14 @@ char		**get_key(char *av[])
 		char	*tmp = (char *)malloc(sizeof(char) * 64);
 
 		printf("\033[93mPreparing bruteforce...\033[0m\n");
+		key = (char **)malloc(sizeof(char *) * (1 << 22));
 		while (read(fd, &c, 1) > 0)
 		{
 			if (c == '\n')
 			{
 				while (i < 63)
 					tmp[i++] = 0;
-				key[j++] = strdup(tmp);
+				key[j++] = strdup(str_toupper(tmp));
 				i = 0;
 			}
 			else
@@ -120,6 +121,7 @@ char		**get_key(char *av[])
 		}
 		key[j] = NULL;
 		free(tmp);
+		close(fd);
 		printf("\033[92mDone\033[0m -> \033[96m%d\033[0m words to test.\n\n", j);
 	}
 	return (key);
@@ -128,16 +130,18 @@ char		**get_key(char *av[])
 char		*rot_n(const char *str, int n)
 {
 	int		i, j;
-	char	*s = strdup(str);
+	char	*res, *s = strdup(str);
 
+	res = s;
 	for (i=0; i < n; i++)
 		for (j=0; j < (int)strlen(s)-1; j++)
 		{
-			s[j] ^= s[j+1];
-			s[j+1] ^= s[j];
-			s[j] ^= s[j+1];
+			res[j] ^= res[j+1];
+			res[j+1] ^= res[j];
+			res[j] ^= res[j+1];
 		}
-	return (s);
+	free(s);
+	return (res);
 }
 
 int			get_pos(char *s, char c)
@@ -153,11 +157,11 @@ int			get_pos(char *s, char c)
 char		*VIGENERE(char *src, char **table)
 {
 	int		i, j, k;
-	char	*res = NULL;
+	char	*res, *ret;
 
-	res = (char *)malloc(sizeof(char) * 64);
-	for (i=0; i < 64; i++)
-		res[i] = 0;
+	if (!(ret = (char *)malloc(sizeof(char) * 64)))
+		return (NULL);
+	res = ret;
 	for (i=0, j=1, k=0; src[i]; i++)
 	{
 		j = (!table[j]) ? 1 : j;	// always check each letter of the KEY
@@ -174,19 +178,24 @@ char		*VIGENERE(char *src, char **table)
 				? table[0][get_pos(table[j++], src[i])]
 				: src[i];
 		}
-//		printf("%c", res[k]);
 		k++;
 	}
 	res[k] = 0;
+	for (i=0; table[i]; i++)	// get rid of memory leaks
+		free(table[i]);			// because -SWAG-
+	free(table);				// deal with it
+	free(ret);
 	return (res);
 }
 
-void		init_vig_table(char *key)
+char		**init_vig_table(char *key)
 {
 	int		i, j, k;
 	char	*tmp;
+	char	**table = (char **)malloc(sizeof(char *) * 32);
 
-	TABLE[0] = strdup(ALPHABET);
+	printf("\033[94m%s\033[0m: ", key);
+	table[0] = strdup(ALPHABET);
 	for (j=0, k = 1; key[j]; j++)
 	{
 		for (i=1; i < (int)strlen(ALPHABET); i++)
@@ -194,45 +203,67 @@ void		init_vig_table(char *key)
 			tmp = rot_n(ALPHABET, i);		// rotation algorithm
 											// to generate a Vigenere table
 			if (tmp[0] == key[j])
-				TABLE[k++] = strdup(tmp);
+				table[k++] = strdup(tmp);
 		}
 	}
-	TABLE[k] = NULL;
+	table[k] = NULL;
+	return (table);
+}
+
+char		*get_str(char *arg)
+{
+	int		fd;
+	char	*str;
+
+	if ((fd = open(arg, O_RDONLY)) < 0)
+		str = strdup(str_toupper(arg));	// get a CAPS version of the tested string
+	else
+	{
+		int		i = 0;
+		char	c;
+		char	*tmp = (char *)malloc(sizeof(char) * 1024);
+
+		while (read(fd, &c, 1) > 0)
+		{
+			if (c != '\n')
+				tmp[i++] = c;
+			else
+				tmp[i] = 0;
+		}
+		while (i < 1024)
+			tmp[i++] = 0;
+		str = strdup(str_toupper(tmp));
+		free(tmp);
+		close(fd);
+	}
+	return (str);
 }
 
 int			main(int ac, char *av[])
 {
 	int		i, x;
-	char	*res, **key, *str;
+	char	*res, *str;
+	char	**TABLE, **key;
 
 	if (check_args(ac, av))
 		return (-1);
 	flag = (av[1][1] - 'c') * 32;	// the result of this operation
 									// will be 32 (DECODE), or 64 (ENCODE)
 
-	str = strdup(str_toupper(av[3]));	// get a CAPS version of the tested string
+	str = get_str(av[3]);
 
 	key = get_key(av);	// get a clan version of the KEY
 
 	for (x = 0; key[x]; x++)
 	{
-		TABLE = (char **)malloc(sizeof(char *) * 1024);
-
-		printf("\033[94m%s\033[0m: ", key[x]);
-		init_vig_table(key[x]);	// create a Vigenere table
-								// (based on custom alphabet)
+		TABLE = init_vig_table(key[x]);		// create a Vigenere table
+											// (based on custom alphabet)
+		free(key[x]);
 
 		res = VIGENERE(str, TABLE);
 		print_res(res);
-		free(res);
-
-		for (i=0; TABLE[i]; i++)	// get rid of memory leaks
-			free(TABLE[i]);			// because -SWAG-
-		free(TABLE);				// deal with it
 	}
-	for (i=0; key[i]; i++)	// still getting rid of memory leaks
-		free(key[i]);		// still because -SWAG-
-	free(key);				// then goddam deal with it
+	free(str);
 
 	return (0);
 }
