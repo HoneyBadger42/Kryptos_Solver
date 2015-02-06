@@ -159,7 +159,7 @@ char		*VIGENERE(char *src, char **table)
 	int		i, j, k;
 	char	*res, *ret;
 
-	if (!(ret = (char *)malloc(sizeof(char) * 64)))
+	if (!(ret = (char *)malloc(sizeof(char) * 1024)))
 		return (NULL);
 	res = ret;
 	for (i=0, j=1, k=0; src[i]; i++)
@@ -241,7 +241,7 @@ char		*get_str(char *arg)
 
 int			main(int ac, char *av[])
 {
-	int		i, x;
+	int		x;
 	char	*res, *str;
 	char	**TABLE, **key;
 
