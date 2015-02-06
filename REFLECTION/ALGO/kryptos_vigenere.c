@@ -192,7 +192,7 @@ char		**init_vig_table(char *key)
 {
 	int		i, j, k;
 	char	*tmp;
-	char	**table = (char **)malloc(sizeof(char *) * 32);
+	char	**table = (char **)malloc(sizeof(char *) * 1024);
 
 	printf("\033[94m%s\033[0m: ", key);
 	table[0] = strdup(ALPHABET);
