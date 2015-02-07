@@ -13,6 +13,7 @@ void		print_char_analysis(int **CHARS, float total_len)
 	int		c, i, n;
 	float	ratio;
 
+	printf("%ld characters:\n\n", (long int)total_len);
 	for (i=0; i < SIZE; i++)
 	{
 		if ((n = CHARS[i][0]) > 0)
@@ -21,9 +22,19 @@ void		print_char_analysis(int **CHARS, float total_len)
 			ratio = (float)(n * 100 / total_len);
 
 			if (c < 32 || c == 127)
-				printf("'0x%02x' =>  %.02f%c\n", c, ratio, '%');
+				printf("'0x%02x' =>  %.02f%c (%d %s)\n",
+						c,
+						ratio,
+						'%',
+						n,
+						(n > 1) ? "times" : "time");
 			else
-				printf("'%c'    =>  %.02f%c\n", c, ratio, '%');
+				printf("'%c'    =>  %.02f%c (%d %s)\n",
+						c,
+						ratio,
+						'%',
+						n,
+						(n > 1) ? "times" : "time");
 		}
 	}
 }
