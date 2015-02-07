@@ -4,8 +4,6 @@
 #include <string.h>
 #include <fcntl.h>
 
-const char *haystack = "ITWASTOTALLYINVISIBLEHOWSTHATPOSSIBLE?THEYUSEDTHEEARTHSMAGNETICFIELDXTHEINFORMATIONWASGATHEREDANDTRANSMITTEDUNDERGRUUNDTOANUNKNOWNLOCATIONXDOESLANGLEYKNOWABOUTTHIS?THEYSHOULDITSBURIEDOUTTHERESOMEWHEREXWHOKNOWSTHEEXACTLOCATION?ONLYWWTHISWASHISLASTMESSAGEXTHIRTYEIGHTDEGREESFIFTYSEVENMINUTESSIXPOINTFIVESECONDSNORTHSEVENTYSEVENDEGREESEIGHTMINUTESFORTYFOURSECONDSWESTIDBYROWS";
-
 int			count_char(char *s, char c)
 {
 	int		i, j;
@@ -72,27 +70,33 @@ char		*filetoupper(char *file)
 
 char		**file_to_needles(char *src_file)
 {
-	int		i, res;
 	char	*file;
 	char	**needles;
 
 	file = filetoupper(src_file);
 	needles = split(file, '\n');
 	free(file);
+	return (needles);
+}
+
+int			valid_words_num(char *haystack, char **needles)
+{
+	int		i, res;
+
 	for (i=0, res=0; needles[i]; i++)
 		if (strstr(haystack, needles[i]))
 			res++;
-	return (needles);
+	return (res);
 }
 
 int			main(int ac, char *av[])
 {
-	char **need;
+	char **needles;
+
 	if (ac != 2)
 		return (-1);
-	need = file_to_needles(av[1]);
-	int i;
-	for (i=0; need[i]; i++)
-		printf("%s\n", need[i]);
+
+	needles = file_to_needles(av[1]);
+
 	return (0);
 }
