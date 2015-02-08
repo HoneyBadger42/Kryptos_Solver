@@ -60,28 +60,102 @@ int			check_args(int ac, char *av[])
 	return (0);
 }
 
-void		print_res(char *s)
-{
-	int		i;
-
-	for (i=0; s[i]; i++)
-		if (s[i] != ' ')
-			printf("%c", s[i]);
-	printf("\n");
-}
-
 char		*str_toupper(char *str)
 {
 	int		i;
 
-	for (i = 0; str[i]; i++)
-		str[i] -= (str[i] >= 'a' && str[i] <= 'z') ? 0x20 : 0x00;
+	for (i=0; str[i]; i++)
+		if (str[i] >= 'a' && str[i] <= 'z')
+			str[i] -= 32;
 	return (str);
+}
+
+int			count_char(char *s, char c)
+{
+	int		i, j;
+
+	for (i=0, j=0; s[i]; i++)
+		if (s[i] == c)
+			j++;
+	j++;
+	return (j);
+}
+
+char		**split(char *src, char split)
+{
+	int		i, j, k;
+	int		size = count_char(src, split);
+	char	**res = (char **)malloc(sizeof(char *) * size);
+
+	for (i=0; i < size; i++)
+	{
+		res[i] = (char *)malloc(sizeof(char *) * 1024);
+		for (j=0; j < 1024; j++)
+			res[i][j] = 0;
+	}
+	for (i=0, k=0; src[i]; i++)
+	{
+		if (src[i] != split)
+			res[k][j++] = src[i];
+		else
+		{
+			j = 0;
+			k++;
+		}
+	}
+	res[k] = NULL;
+
+	return (res);
+}
+
+char		*filetoupper(char *file)
+{
+	int		fd, i = 0;
+	char	*res;
+	char	buf[128] = {0};
+
+	if ((fd = open(file, O_RDONLY)) < 0)
+		return (NULL);
+
+	while (read(fd, buf, 128) > 0)
+		i++;
+	i = (i * 128) + 128;
+	close(fd);
+
+	res = (char *)malloc(sizeof(char) * i);
+	fd = open(file, O_RDONLY);
+	read(fd, res, i);
+
+	str_toupper(res);
+
+	close(fd);
+	return (res);
+}
+
+char		**file_to_needles(char *src_file)
+{
+	char	*file;
+	char	**needles;
+
+	file = filetoupper(src_file);
+	needles = split(file, '\n');
+	free(file);
+	return (needles);
+}
+
+int			valid_words_num(char *haystack, char **needles)
+{
+	int		i, res;
+
+	for (i=0, res=0; needles[i]; i++)
+		if (strstr(haystack, needles[i]))
+			res++;
+	return (res);
 }
 
 char		**get_key(char *av[])
 {
-	int		fd;
+	int		i, fd;
 	char	**key = NULL;
 
 	if ((fd = open(av[2], O_RDONLY)) < 0)
@@ -101,28 +175,11 @@ char		**get_key(char *av[])
 	}
 	else
 	{
-		char	c = 0;
-		int		i = 0, j = 0;
-		char	*tmp = (char *)malloc(sizeof(char) * 64);
-
-		printf("\033[93mPreparing bruteforce...\033[0m\n");
-		key = (char **)malloc(sizeof(char *) * (1 << 22));
-		while (read(fd, &c, 1) > 0)
-		{
-			if (c == '\n')
-			{
-				while (i < 63)
-					tmp[i++] = 0;
-				key[j++] = strdup(str_toupper(tmp));
-				i = 0;
-			}
-			else
-				tmp[i++] = c;
-		}
-		key[j] = NULL;
-		free(tmp);
 		close(fd);
-		printf("\033[92mDone\033[0m -> \033[96m%d\033[0m words to test.\n\n", j);
+		printf("\033[93mPreparing bruteforce...\033[0m\n");
+		key = file_to_needles(av[2]);
+		for (i=0; key[i]; i++);
+		printf("\033[92mDone\033[0m -> \033[96m%d\033[0m words to test.\n\n", i);
 	}
 	return (key);
 }
@@ -130,17 +187,17 @@ char		**get_key(char *av[])
 char		*rot_n(const char *str, int n)
 {
 	int		i, j;
-	char	*res, *s = strdup(str);
+	char	*res = strdup(str);
 
-	res = s;
 	for (i=0; i < n; i++)
-		for (j=0; j < (int)strlen(s)-1; j++)
+	{
+		for (j=0; j < (int)(strlen(str) - 1); j++)
 		{
 			res[j] ^= res[j+1];
 			res[j+1] ^= res[j];
 			res[j] ^= res[j+1];
 		}
-	free(s);
+	}
 	return (res);
 }
 
@@ -148,65 +205,60 @@ int			get_pos(char *s, char c)
 {
 	int		i;
 
-	for (i=1; s[i]; i++)
+	for (i = 0; s[i]; i++)
 		if (s[i] == c)
 			return (i);
 	return (0);
 }
 
-char		*VIGENERE(char *src, char **table)
+char		*VIGENERE(char *src, char **table, char *key)
 {
-	int		i, j, k;
-	char	*res, *ret;
+	int		i, j, k, Tpos, key_len = strlen(key);
+	char	*res, *tmp = (char *)malloc(sizeof(char) * strlen(src));
 
-	if (!(ret = (char *)malloc(sizeof(char) * 1024)))
-		return (NULL);
-	res = ret;
-	for (i=0, j=1, k=0; src[i]; i++)
+	for (i=0, j=0, k=0; src[i]; i++)
 	{
-		j = (!table[j]) ? 1 : j;	// always check each letter of the KEY
+		j %= key_len;						// always check each letter of the KEY
+		Tpos = get_pos(table[0], key[j]);	//find its pos on the reference ALPHABET
 
 		if (flag == ENCODE)
 		{
-			res[k] = (src[i] >= 'A' && src[i] <= 'Z')
-				? table[j++][get_pos(table[0], src[i])]
-				: src[i];
+			if (src[i] >= 'A' && src[i] <= 'Z')
+			{
+				tmp[k] = table[Tpos][get_pos(table[0], src[i])];
+				j++;
+			}
+			else
+				tmp[k] = src[i];
 		}
 		else
 		{
-			res[k] = (src[i] >= 'A' && src[i] <= 'Z')
-				? table[0][get_pos(table[j++], src[i])]
-				: src[i];
+			if (src[i] >= 'A' && src[i] <= 'Z')
+			{
+				tmp[k] = table[0][get_pos(table[Tpos], src[i])];
+				j++;
+			}
+			else
+				tmp[k] = src[i];
 		}
 		k++;
 	}
-	res[k] = 0;
-	for (i=0; table[i]; i++)	// get rid of memory leaks
-		free(table[i]);			// because -SWAG-
-	free(table);				// deal with it
-	free(ret);
+	tmp[k] = 0;
+	res = strdup(tmp);
+	free(tmp);
 	return (res);
 }
 
-char		**init_vig_table(char *key)
+char		**init_vig_table(void)
 {
-	int		i, j, k;
-	char	*tmp;
-	char	**table = (char **)malloc(sizeof(char *) * 1024);
+	int		i;
+	char	**table = (char **)malloc(sizeof(char *) * strlen(ALPHABET) + 1);
 
-	printf("\033[94m%s\033[0m: ", key);
 	table[0] = strdup(ALPHABET);
-	for (j=0, k = 1; key[j]; j++)
-	{
-		for (i=1; i < (int)strlen(ALPHABET); i++)
-		{
-			tmp = rot_n(ALPHABET, i);		// rotation algorithm
-											// to generate a Vigenere table
-			if (tmp[0] == key[j])
-				table[k++] = strdup(tmp);
-		}
-	}
-	table[k] = NULL;
+	for (i=1; i < (int)strlen(ALPHABET); i++)
+		table[i] = rot_n(ALPHABET, i);	// rotation algorithm
+										// to generate a Vigenere table
+	table[i] = NULL;
 	return (table);
 }
 
@@ -239,11 +291,38 @@ char		*get_str(char *arg)
 	return (str);
 }
 
+void		print_res(char *str, char **key)
+{
+	int		i, j;
+	char	*res, **table;
+
+	table = init_vig_table();	// create a Vigenere table
+								// (based on custom alphabet)
+	for (i = 0; key[i]; i++)
+	{
+		if (strlen(key[i]))
+		{
+			res = VIGENERE(str, table, key[i]);
+
+			for (j=0; res[j]; j++)
+				if (res[j] != ' ')
+					printf("%c", res[j]);
+			printf("\n");
+
+			free(res);
+		}
+	}
+
+	for (i=0; table[i]; i++)	// get rid of memory leaks
+		free(table[i]);			// because -SWAG-
+	free(table);				// deal with it
+}
+
 int			main(int ac, char *av[])
 {
-	int		x;
-	char	*res, *str;
-	char	**TABLE, **key;
+	int		i;
+	char	*str;
+	char	**key;
 
 	if (check_args(ac, av))
 		return (-1);
@@ -251,19 +330,15 @@ int			main(int ac, char *av[])
 									// will be 32 (DECODE), or 64 (ENCODE)
 
 	str = get_str(av[3]);
-
 	key = get_key(av);	// get a clan version of the KEY
 
-	for (x = 0; key[x]; x++)
-	{
-		TABLE = init_vig_table(key[x]);		// create a Vigenere table
-											// (based on custom alphabet)
-		free(key[x]);
 
-		res = VIGENERE(str, TABLE);
-		print_res(res);
-	}
+    print_res(str, key);
+
+
+	for (i=0; key[i]; i++)		// get rid of memory leaks
+		free(key[i]);			// because -SWAG-
+	free(key);					// deal with it
 	free(str);
-
 	return (0);
 }
