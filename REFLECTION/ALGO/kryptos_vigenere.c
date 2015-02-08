@@ -35,8 +35,8 @@ int			usage(void)
 	printf("usage: \033[92m./kryptos_vigenere\033[0m");
 	printf(" <\033[95m-e\033[0m|\033[95m-d\033[0m> ");
 	printf("<\033[94mkey\033[0m|\033[94mwordlist\033[0m> ");
-	printf("<\033[96mstring\033[0m|\033[96mfile\033[0m> [\033[93m--full\033[0m]\n");
-	printf("\n\033[93mExamples\033[0m:\n");
+	printf("<\033[96mstring\033[0m|\033[96mfile\033[0m> [\033[93m--syn\033[0m]\n");
+	printf("\n\n\033[33mExamples\033[0m:\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e \"maclef\" \"coucou\"\n");
 	printf("\033[96m> \033[94mMACLEF\033[0m: RFTKJA\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e - \"coucou\"\n");
@@ -46,6 +46,13 @@ int			usage(void)
 	printf("\033[95m> \033[94mMACLEF\033[0m: COUCOU\n");
 	printf("\033[95m> \033[92m./kryptos_vigenere\033[0m -d - \"DAXGDR\"\n");
 	printf("\033[95m> \033[94mKRYPTOSABCDEFGHIJLMNQUVWXZ\033[0m: COUCOU\n");
+	printf("\n----------------\n\n");
+	printf("Use \033[93m--syn\033[0m to launch a ");
+	printf("dictionnary attack, with syntax analysis.\n\n");
+	printf("This attack might take a few seconds, up to a few hours...\n");
+	printf("(It depends of your processor, and the DICT you choose)\n");
+	printf("(-> '\033[94mREFLECTION/DICT_english\033[0m' ");
+	printf("is good enough to solve Part1 & 2, under 10min)\n");
 	return (-1);
 }
 
@@ -57,7 +64,7 @@ int			check_args(int ac, char *av[])
 			return (usage());
 		else
 		{
-			if (!strcmp("--full", av[4]))
+			if (!strcmp("--syn", av[4]))
 				analysis_flag = 1;
 			else
 				return (usage());
@@ -305,7 +312,7 @@ void		putcustomstr(char *res, char *key)
 {
 	int		j;
 
-	printf("%s: ", key);
+	printf("\033[94m%s\033[0m: ", key);
 	for (j=0; res[j]; j++)
 		if (res[j] != ' ')
 			printf("%c", res[j]);
@@ -323,7 +330,7 @@ void		display_res(char *str, char **key)
 								// (based on custom alphabet)
 
 	if (analysis_flag)
-		printf("Bruteforce and syntax analysis...\n");
+		printf("\033[95mDictionnary attack, with syntax analysis...\nBest candidates\033[0m:\n\n");
 
 	for (i = 0; key[i]; i++)
 	{
@@ -336,7 +343,6 @@ void		display_res(char *str, char **key)
 			else
 			{
 				qty = valid_words_num(res, key);
-//				printf("%d\n", qty);
 				if (qty > check)
 				{
 					check = qty;
@@ -348,8 +354,6 @@ void		display_res(char *str, char **key)
 			free(res);
 		}
 	}
-	if (analysis_flag)
-		putcustomstr(tmp_buf, key[i]);
 
 	for (i=0; table[i]; i++)	// get rid of memory leaks
 		free(table[i]);			// because -SWAG-
