@@ -336,12 +336,13 @@ void		display_res(char *str, char **key)
 			else
 			{
 				qty = valid_words_num(res, key);
-				printf("%d\n", qty);
+//				printf("%d\n", qty);
 				if (qty > check)
 				{
 					check = qty;
 					for (j=0; res[j]; j++)
 						tmp_buf[j] = res[j];
+					putcustomstr(tmp_buf, key[i]);
 				}
 			}
 			free(res);
