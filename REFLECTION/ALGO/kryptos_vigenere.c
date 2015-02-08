@@ -27,7 +27,7 @@
 #define DECODE 32
 #define ENCODE 64
 
-int			flag;
+int			flag, analysis_flag = 0;
 const char	*ALPHABET = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
 
 int			usage(void)
@@ -35,7 +35,7 @@ int			usage(void)
 	printf("usage: \033[92m./kryptos_vigenere\033[0m");
 	printf(" <\033[95m-e\033[0m|\033[95m-d\033[0m> ");
 	printf("<\033[94mkey\033[0m|\033[94mwordlist\033[0m> ");
-	printf("<\033[96mstring\033[0m|\033[96mfile\033[0m>\n");
+	printf("<\033[96mstring\033[0m|\033[96mfile\033[0m> [\033[93m--full\033[0m]\n");
 	printf("\n\033[93mExamples\033[0m:\n");
 	printf("\033[96m> \033[92m./kryptos_vigenere\033[0m -e \"maclef\" \"coucou\"\n");
 	printf("\033[96m> \033[94mMACLEF\033[0m: RFTKJA\n");
@@ -52,7 +52,17 @@ int			usage(void)
 int			check_args(int ac, char *av[])
 {
 	if (ac != 4)
-		return (usage());
+	{
+		if (ac != 5)
+			return (usage());
+		else
+		{
+			if (!strcmp("--full", av[4]))
+				analysis_flag = 1;
+			else
+				return (usage());
+		}
+	}
 	else if (!(!strcmp(av[1], "-e") || !strcmp(av[1], "-d")))
 		return (usage());
 	else if (!av[3][0])
@@ -291,27 +301,54 @@ char		*get_str(char *arg)
 	return (str);
 }
 
-void		print_res(char *str, char **key)
+void		putcustomstr(char *res, char *key)
 {
-	int		i, j;
-	char	*res, **table;
+	int		j;
+
+	printf("%s: ", key);
+	for (j=0; res[j]; j++)
+		if (res[j] != ' ')
+			printf("%c", res[j]);
+	printf("\n");
+}
+
+void		display_res(char *str, char **key)
+{
+	static int	check = 0;
+	int			i, j, qty;
+	char		*res, **table;
+	char		tmp_buf[1024] = {0};
 
 	table = init_vig_table();	// create a Vigenere table
 								// (based on custom alphabet)
+
+	if (analysis_flag)
+		printf("Bruteforce and syntax analysis...\n");
+
 	for (i = 0; key[i]; i++)
 	{
 		if (strlen(key[i]))
 		{
 			res = VIGENERE(str, table, key[i]);
 
-			for (j=0; res[j]; j++)
-				if (res[j] != ' ')
-					printf("%c", res[j]);
-			printf("\n");
-
+			if (!analysis_flag)
+				putcustomstr(res, key[i]);
+			else
+			{
+				qty = valid_words_num(res, key);
+				printf("%d\n", qty);
+				if (qty > check)
+				{
+					check = qty;
+					for (j=0; res[j]; j++)
+						tmp_buf[j] = res[j];
+				}
+			}
 			free(res);
 		}
 	}
+	if (analysis_flag)
+		putcustomstr(tmp_buf, key[i]);
 
 	for (i=0; table[i]; i++)	// get rid of memory leaks
 		free(table[i]);			// because -SWAG-
@@ -321,8 +358,7 @@ void		print_res(char *str, char **key)
 int			main(int ac, char *av[])
 {
 	int		i;
-	char	*str;
-	char	**key;
+	char	*str, **key;
 
 	if (check_args(ac, av))
 		return (-1);
@@ -332,8 +368,7 @@ int			main(int ac, char *av[])
 	str = get_str(av[3]);
 	key = get_key(av);	// get a clan version of the KEY
 
-
-    print_res(str, key);
+    display_res(str, key);
 
 
 	for (i=0; key[i]; i++)		// get rid of memory leaks
