@@ -1,8 +1,16 @@
 #!/bin/bash
 
-gcc ../REFLECTION/ALGO/kryptos_vigenere.c
-./a.out -d "abscissa" enigma.txt
-rm ./a.out
+gcc ../REFLECTION/ALGO/kryptos_vigenere.c -o /tmp/a.out
+if [[ "$1" == "--quick" ]]
+then
+	/tmp/a.out -d "abscissa" enigma.txt
+elif [[ "$1" == "--full" ]]
+then
+	/tmp/a.out -d ../REFLECTION/DICT_english enigma.txt --syn
+else
+	printf "usage: \033[92m./Solve <\033[96m--quick\033[0m|\033[96m--full\033[0m>\n"
+fi
+rm -rf /tmp/a.out
 
 #
 # Using vigenere algo, optimized for the KRYPTOS enigma
