@@ -2,7 +2,9 @@
  **
  ** Vigenere algo,
  ** optimized for the KRYPTOS enigma
- ** Fast and leaks-free program (you can use it while BruteForcing keys).
+ ** Fast and leaks-free program.
+ **
+ ** You can test it with strings, or files containing keys
  **
  ** - - - - -
  **
@@ -371,7 +373,8 @@ int			main(int ac, char *av[])
 									// will be 32 (DECODE), or 64 (ENCODE)
 
 	str = get_str(av[3]);
-	key = get_key(av);	// get a clan version of the KEY
+	key = get_key(av);	// get a clean version of the KEY (in caps)
+
 
     display_res(str, key);
 
