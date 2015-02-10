@@ -23,8 +23,9 @@ The Part4 contains:
 
 In the `REFLECTION/` dir, you can find:
 - strange facts I found, they might be clues...
-- my algorithms (in 3 source files, written in C)
+- my algorithms (in 3 source files, written in C) in the `ALGO` dir
 - the original Kryptos text (global_view)
+- an english, and a multilingual dictionary (they are huge)
 - interesting web links (`web_links/` dir)
 
 Have fun,
